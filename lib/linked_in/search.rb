@@ -8,12 +8,25 @@ module LinkedIn
       if options.is_a?(Hash)
         fields = options.delete(:fields)
         path += field_selector(fields) if fields
+
+        facet = options.delete(:facet)
+        facet_string = facet.collect { |f| "facet=#{f}"}.join('&')
       end
 
       options = { :keywords => options } if options.is_a?(String)
       options = format_options_for_query(options)
 
-      result_json = get(to_uri(path, options))
+      formatted_uri = to_uri(path, options)
+
+      if facet_string
+        if formatted_uri.match(/\?/)
+          formatted_uri += "&" + facet_string
+        else
+          formatted_uri += facet_string
+        end
+      end
+
+      result_json = get(formatted_uri)
 
       Mash.from_json(result_json)
     end
